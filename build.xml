@@ -110,11 +110,21 @@ questions.
                 <attribute name="Implementation-Title" value="App Bundler Ant Task"/>
                 <attribute name="Implementation-Version" value="${version}"/>
             </manifest>
-            <fileset dir="${ant.project.name}/${folder.classes}"/>
+            <fileset dir="${ant.project.name}/${folder.classes}" excludes="com/oracle/appbundler/splash/*"/>
             <fileset dir="${ant.project.name}/${folder.bin}">
                 <include name="JavaAppLauncher"/>
                 <include name="*.zip"/>
             </fileset>
+        </jar>
+
+        <jar destfile="${ant.project.name}/${folder.bin}/${ant.project.name}-splash-${version}.jar" index="true">
+            <manifest>
+                <attribute name="Implementation-Vendor-Id" value="com.oracle"/>
+                <attribute name="Implementation-Vendor" value="Oracle"/>
+                <attribute name="Implementation-Title" value="App Bundler SplashScreen support"/>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+            <fileset dir="${ant.project.name}/${folder.classes}" includes="com/oracle/appbundler/splash/*"/>
         </jar>
     </target>
 

@@ -38,6 +38,7 @@
 #define JVM_ARGUMENTS_KEY "JVMArguments"
 #define JVM_CLASSPATH_KEY "JVMClassPath"
 #define JVM_DEBUG_KEY "JVMDebug"
+#define SPLASH_IMAGE_KEY "SplashImage"
 
 #define JVM_RUN_PRIVILEGED "JVMRunPrivileged"
 
@@ -63,11 +64,13 @@ typedef int (JNICALL *JLI_Launch_t)(int argc, char ** argv,
 static char** progargv = NULL;
 static int progargc = 0;
 static int launchCount = 0;
+static NSWindow* splashScreenWindow = nil;
 
 int launch(char *, int, char **);
 NSString * findDylib (bool);
 int extractMajorVersion (NSString *vstring)
 ;NSString * convertRelativeFilePath(NSString * path);
+void displaySplashScreen(NSString* imagePath);
 
 int main(int argc, char *argv[]) {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -336,7 +339,17 @@ int launch(char *commandName, int progargc, char *progargv[]) {
 	for (int ctr = 0; ctr < progargc; ctr++) {
 		argv[i++] = progargv[ctr];
 	}
-    
+
+    // show splash screen, if requested via Info.plist entry
+    if (launchCount == 0) {
+        NSString* splashImagePath = [infoDictionary objectForKey:@SPLASH_IMAGE_KEY];
+        if (splashImagePath != nil) {
+            if ([splashImagePath characterAtIndex:0] != '/')
+                splashImagePath = [mainBundlePath stringByAppendingFormat:@"/%@", splashImagePath];
+            displaySplashScreen(splashImagePath);
+        }
+    }
+
     // Print the full command line for debugging purposes...
     if (isDebugging) {
         NSLog(@"Command line passed to application:");
@@ -547,4 +560,102 @@ int extractMajorVersion (NSString *vstring)
 
 NSString * convertRelativeFilePath(NSString * path) {
     return [path stringByStandardizingPath];
+}
+
+void displaySplashScreen(NSString* imagePath) {
+    if (splashScreenWindow != nil)
+        return;
+
+    // create application
+    [NSApplication sharedApplication];
+    
+    // load image
+    NSImage* image = [[NSImage alloc] initWithContentsOfFile:imagePath];
+    if (image == nil) {
+        NSLog (@"Failed to load splash image from file %@", imagePath);
+        return;
+    }
+    [image autorelease];
+    NSSize imageSize = [image size];
+    NSRect imageRect = NSMakeRect(0, 0, imageSize.width, imageSize.height);
+    
+    // create image view
+    NSImageView* view = [[NSImageView alloc] initWithFrame:imageRect];
+    [view autorelease];
+    [view setImage:image];
+    
+    // create window
+    splashScreenWindow = [[NSWindow alloc] initWithContentRect:imageRect
+                                                     styleMask:NSBorderlessWindowMask
+                                                       backing:NSBackingStoreBuffered
+                                                         defer:NO];
+    [splashScreenWindow setReleasedWhenClosed:YES];
+    [splashScreenWindow setContentView:view];
+    [splashScreenWindow center];
+    
+    // show window
+    [splashScreenWindow orderFrontRegardless];
+}
+
+static jboolean JNICALL SplashScreen_getBounds(JNIEnv* env, jclass clazz, jintArray coordinates)
+{
+    if (splashScreenWindow == nil)
+        return false;
+
+    NSRect frame = [splashScreenWindow frame];
+
+    jint* coordinatesArray = (*env)->GetIntArrayElements(env, coordinates, NULL);
+    if (coordinatesArray == NULL)
+        return false;
+
+    NSSize screenSize = [[splashScreenWindow screen] frame].size;
+    coordinatesArray[0] = frame.origin.x;
+    coordinatesArray[1] = screenSize.height - frame.origin.y - frame.size.height;
+    coordinatesArray[2] = frame.size.width;
+    coordinatesArray[3] = frame.size.height;
+    
+    (*env)->ReleaseIntArrayElements(env, coordinates, coordinatesArray, 0);
+
+    return true;
+}
+
+static jboolean JNICALL SplashScreen_close(JNIEnv* env, jclass clazz)
+{
+    if (splashScreenWindow == nil)
+        return false;
+
+    [splashScreenWindow orderOut:nil];
+    [splashScreenWindow close];
+    splashScreenWindow = nil;
+    
+    return true;
+}
+
+static void registerSplashScreenMethods(JNIEnv* env) {
+    // get the class
+    jclass clazz = (*env)->FindClass(env, "com/oracle/appbundler/splash/SplashScreen");
+    if (clazz == NULL)
+        return;
+
+    // register the methods
+    static JNINativeMethod methods[] = {
+        {"getBounds",   "([I)Z",    (void *)&SplashScreen_getBounds},
+        {"close",       "()Z",      (void *)&SplashScreen_close},
+    };
+
+    (*env)->RegisterNatives(env, clazz, methods, sizeof(methods) / sizeof(methods[0]));
+}
+
+extern jint JNI_OnLoad_AppBundler(JavaVM* vm, void* reserved)
+{
+    // get the JNIEnv
+    void* _env;
+    if ((*vm)->GetEnv(vm, &_env, JNI_VERSION_1_6) == 0) {
+        printf("got JNIEnv\n");
+        JNIEnv* env = (JNIEnv*)_env;
+
+        registerSplashScreenMethods(env);
+    }
+
+    return JNI_VERSION_1_8;
 }
