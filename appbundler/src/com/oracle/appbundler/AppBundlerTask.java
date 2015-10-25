@@ -42,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -113,6 +114,7 @@ public class AppBundlerTask extends Task {
     private static final String STRING_TAG = "string";
     
     private static final int BUFFER_SIZE = 2048;
+    private List<PlistEntry> customPlistEntries = new ArrayList<>();
 
     public void setOutputDirectory(File outputDirectory) {
         this.outputDirectory = outputDirectory;
@@ -269,6 +271,17 @@ public class AppBundlerTask extends Task {
         }
 
         architectures.add(name);   
+    }
+
+    public void addConfiguredPlistEntry(PlistEntry entry) throws BuildException {
+        if(entry.getKey() == null) {
+            throw new BuildException("Key is required.");
+        }
+        if(entry.getValue() == null) {
+            throw new BuildException("Value is required.");
+        }
+
+        customPlistEntries.add(entry);
     }
 
     @Override
@@ -707,6 +720,8 @@ public class AppBundlerTask extends Task {
 
             xout.writeEndElement();
 
+            writeCustomEntries(xout, customPlistEntries);
+
             // End root dictionary
             xout.writeEndElement();
             // End root element
@@ -719,6 +734,12 @@ public class AppBundlerTask extends Task {
             throw new IOException(exception);
         } finally {
             out.close();
+        }
+    }
+
+    private void writeCustomEntries(XMLStreamWriter xout, List<PlistEntry> entries) throws XMLStreamException {
+        for(PlistEntry entry : entries) {
+            writeProperty(xout, entry.getKey(), entry.getValue());
         }
     }
 
