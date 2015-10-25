@@ -460,8 +460,7 @@ public class AppBundlerTask extends Task {
             DirectoryScanner directoryScanner = runtime.getDirectoryScanner(getProject());
             String[] includedFiles = directoryScanner.getIncludedFiles();
 
-            for (int i = 0; i < includedFiles.length; i++) {
-                String includedFile = includedFiles[i];
+            for (String includedFile : includedFiles) {
                 File source = new File(runtimeHomeDirectory, includedFile);
                 File destination = new File(pluginHomeDirectory, includedFile);
                 copy(source, destination);
@@ -485,30 +484,22 @@ public class AppBundlerTask extends Task {
     }
 
     private void copyClassPathEntries(File javaDirectory) throws IOException {
-        for (FileSet fileSet : classPath) {
-            File classPathDirectory = fileSet.getDir();
-            DirectoryScanner directoryScanner = fileSet.getDirectoryScanner(getProject());
-            String[] includedFiles = directoryScanner.getIncludedFiles();
-
-            for (int i = 0; i < includedFiles.length; i++) {
-                String includedFile = includedFiles[i];
-                File source = new File(classPathDirectory, includedFile);
-                File destination = new File(javaDirectory, new File(includedFile).getName());
-                copy(source, destination);
-            }
-        }
+        copyFilesToDirectory(classPath, javaDirectory);
     }
 
     private void copyLibraryPathEntries(File macOSDirectory) throws IOException {
-        for (FileSet fileSet : libraryPath) {
-            File libraryPathDirectory = fileSet.getDir();
+        copyFilesToDirectory(libraryPath, macOSDirectory);
+    }
+
+    private void copyFilesToDirectory(ArrayList<FileSet> paths, File directory) throws IOException {
+        for (FileSet fileSet : paths) {
+            File sourceDirectory = fileSet.getDir();
             DirectoryScanner directoryScanner = fileSet.getDirectoryScanner(getProject());
             String[] includedFiles = directoryScanner.getIncludedFiles();
 
-            for (int i = 0; i < includedFiles.length; i++) {
-                String includedFile = includedFiles[i];
-                File source = new File(libraryPathDirectory, includedFile);
-                File destination = new File(macOSDirectory, new File(includedFile).getName());
+            for (String includedFile : includedFiles) {
+                File source = new File(sourceDirectory, includedFile);
+                File destination = new File(directory, new File(includedFile).getName());
                 copy(source, destination);
             }
         }
@@ -523,10 +514,14 @@ public class AppBundlerTask extends Task {
     }
 
     private void copyDocumentIcon(File ifile, File resourcesDirectory) throws IOException {
-        if (icon == null) {
-            return;
-        } else {
+        if (icon != null) {
             copy(ifile, new File(resourcesDirectory, ifile.getName()));
+        }
+    }
+
+    private void writeOptionalProperty(XMLStreamWriter xout, String property, String value) throws XMLStreamException {
+        if(value != null) {
+            writeProperty(xout, property, value);
         }
     }
 
@@ -563,12 +558,9 @@ public class AppBundlerTask extends Task {
             writeProperty(xout, "CFBundleVersion", version);
             writeProperty(xout, "CFBundleSignature", signature);
             writeProperty(xout, "NSHumanReadableCopyright", copyright);
-            if ( minimumSystemVersion != null ){
-                writeProperty(xout, "LSMinimumSystemVersion", minimumSystemVersion);
-            }
-            if (applicationCategory != null) {
-                writeProperty(xout, "LSApplicationCategoryType", applicationCategory);
-            }
+
+            writeOptionalProperty(xout, "LSMinimumSystemVersion", minimumSystemVersion);
+            writeOptionalProperty(xout, "LSApplicationCategoryType", applicationCategory);
             if(hideDockIcon){
                 writeKey(xout, "LSUIElement");
                 writeBoolean(xout, true); 
@@ -601,17 +593,9 @@ public class AppBundlerTask extends Task {
             }
 
             // Write runtime
-            if (runtime != null) {
-                writeProperty(xout, "JVMRuntime", runtime.getDir().getParentFile().getParentFile().getName());
-            }
-            
-            if ( privileged != null ) {
-                writeProperty(xout, "JVMRunPrivileged", privileged);
-            }
-            
-            if ( workingDirectory != null ) {
-                writeProperty(xout, "WorkingDirectory", workingDirectory);
-            }
+            writeOptionalProperty(xout, "JVMRuntime", runtime.getDir().getParentFile().getParentFile().getName());
+            writeOptionalProperty(xout, "JVMRunPrivileged", privileged);
+            writeOptionalProperty(xout, "WorkingDirectory", workingDirectory);
 
             // Write main class name
             writeProperty(xout, "JVMMainClassName", mainClassName);
@@ -649,16 +633,11 @@ public class AppBundlerTask extends Task {
                         writeString(xout, bundleDocument.getIcon());
                     }
                 }
-                
-                writeKey(xout, "CFBundleTypeName");
-                writeString(xout, bundleDocument.getName());
-                    
-                writeKey(xout, "CFBundleTypeRole");
-                writeString(xout, bundleDocument.getRole());
-                
-                writeKey(xout, "LSTypeIsPackage");
-                writeBoolean(xout, bundleDocument.isPackage());
-                
+
+                writeProperty(xout, "CFBundleTypeName", bundleDocument.getName());
+                writeProperty(xout, "CFBundleTypeRole", bundleDocument.getRole());
+                writeProperty(xout, "LSTypeIsPackage", Boolean.toString(bundleDocument.isPackage()));
+
                 xout.writeEndElement();
             }
             
