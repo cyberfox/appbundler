@@ -164,7 +164,7 @@ public class AppBundlerTask extends Task {
         this.workingDirectory = workingDirectory;
     }
     
-    public void setMinimumSystemVersion(String v){
+    public void setMinimumSystemVersion(String v) {
         this.minimumSystemVersion = v;
     }
         
@@ -274,10 +274,10 @@ public class AppBundlerTask extends Task {
     }
 
     public void addConfiguredPlistEntry(PlistEntry entry) throws BuildException {
-        if(entry.getKey() == null) {
+        if (entry.getKey() == null) {
             throw new BuildException("Key is required.");
         }
-        if(entry.getValue() == null) {
+        if (entry.getValue() == null) {
             throw new BuildException("Value is required.");
         }
 
@@ -401,7 +401,7 @@ public class AppBundlerTask extends Task {
 
             // Copy app document icons to Resources folder
             for(BundleDocument bundleDocument: bundleDocuments) {
-                if(bundleDocument.hasIcon()) {
+                if (bundleDocument.hasIcon()) {
                     File ifile = bundleDocument.getIconFile();
                     if (ifile != null) {
                         copyDocumentIcon(ifile,resourcesDirectory); }
@@ -485,7 +485,7 @@ public class AppBundlerTask extends Task {
     }
 
     private void copyClassPathRefEntries(File javaDirectory) throws IOException {
-        if(classPathRef != null) {
+        if (classPathRef != null) {
             org.apache.tools.ant.types.Path classpath = 
                     (org.apache.tools.ant.types.Path) classPathRef.getReferencedObject(getProject());
             
@@ -536,7 +536,7 @@ public class AppBundlerTask extends Task {
     }
 
     private void writeOptionalProperty(XMLStreamWriter xout, String property, String value) throws XMLStreamException {
-        if(value != null) {
+        if (value != null) {
             writeProperty(xout, property, value);
         }
     }
@@ -577,7 +577,8 @@ public class AppBundlerTask extends Task {
 
             writeOptionalProperty(xout, "LSMinimumSystemVersion", minimumSystemVersion);
             writeOptionalProperty(xout, "LSApplicationCategoryType", applicationCategory);
-            if(hideDockIcon){
+
+            if (hideDockIcon) {
                 writeKey(xout, "LSUIElement");
                 writeBoolean(xout, true); 
             }
@@ -586,7 +587,7 @@ public class AppBundlerTask extends Task {
                 writeBoolean(xout, true); 
             }
 
-            if(allowHttp) {
+            if (allowHttp) {
                 writeKey(xout, "NSAppTransportSecurity");
                 xout.writeStartElement(DICT_TAG);
                 writeKey(xout, "NSAllowsArbitraryLoads");
@@ -598,7 +599,7 @@ public class AppBundlerTask extends Task {
                 writeKey(xout, "NSSupportsAutomaticGraphicsSwitching");
                 writeBoolean(xout, true); 
             }
-            if(registeredProtocols.size() > 0){
+            if (registeredProtocols.size() > 0) {
                 writeKey(xout, "CFBundleURLTypes");
                 xout.writeStartElement(ARRAY_TAG);
                 xout.writeStartElement(DICT_TAG);
@@ -607,7 +608,7 @@ public class AppBundlerTask extends Task {
 
                 writeKey(xout, "CFBundleURLSchemes");
                 xout.writeStartElement(ARRAY_TAG);
-                for(String scheme:registeredProtocols){
+                for(String scheme:registeredProtocols) {
                     writeString(xout, scheme);
                 }
 
@@ -645,7 +646,7 @@ public class AppBundlerTask extends Task {
                 }
                 xout.writeEndElement();
 
-                if(bundleDocument.hasIcon()) {
+                if (bundleDocument.hasIcon()) {
                     writeKey(xout, "CFBundleTypeIconFile");
 
                     File ifile = bundleDocument.getIconFile();
