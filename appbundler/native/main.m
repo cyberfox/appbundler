@@ -220,7 +220,12 @@ int launch(char *commandName, int progargc, char *progargv[]) {
                 [classPath appendFormat:@":%@/%@", javaPath, file];
             }
         }
-        
+
+        for (NSString *file in javaDirectoryContents) {
+            if ([file hasSuffix:@".jnilib"]) {
+                [classPath appendFormat:@":%@/%@", javaPath, file];
+            }
+        }
     } else {
         
         // Explicit ClassPath
