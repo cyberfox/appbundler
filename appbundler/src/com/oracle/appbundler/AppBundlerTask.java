@@ -49,6 +49,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import com.oracle.appbundler.xml.IndentingXMLStreamWriter;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Task;
@@ -534,24 +535,20 @@ public class AppBundlerTask extends Task {
         XMLOutputFactory output = XMLOutputFactory.newInstance();
 
         try {
-            XMLStreamWriter xout = output.createXMLStreamWriter(out);
+            XMLStreamWriter xout = new IndentingXMLStreamWriter(output.createXMLStreamWriter(out));
 
             // Write XML declaration
             xout.writeStartDocument();
-            xout.writeCharacters("\n");
 
             // Write plist DTD declaration
             xout.writeDTD(PLIST_DTD);
-            xout.writeCharacters("\n");
 
             // Begin root element
             xout.writeStartElement(PLIST_TAG);
             xout.writeAttribute(PLIST_VERSION_ATTRIBUTE, "1.0");
-            xout.writeCharacters("\n");
 
             // Begin root dictionary
             xout.writeStartElement(DICT_TAG);
-            xout.writeCharacters("\n");
 
             // Write bundle properties
             writeProperty(xout, "CFBundleDevelopmentRegion", "English");
@@ -575,40 +572,32 @@ public class AppBundlerTask extends Task {
             if(hideDockIcon){
                 writeKey(xout, "LSUIElement");
                 writeBoolean(xout, true); 
-                xout.writeCharacters("\n");
             }
             if (highResolutionCapable) {
                 writeKey(xout, "NSHighResolutionCapable");
                 writeBoolean(xout, true); 
-                xout.writeCharacters("\n");
             }
 
             if (supportsAutomaticGraphicsSwitching) {
                 writeKey(xout, "NSSupportsAutomaticGraphicsSwitching");
                 writeBoolean(xout, true); 
-                xout.writeCharacters("\n");
             }
             if(registeredProtocols.size() > 0){
                 writeKey(xout, "CFBundleURLTypes");
                 xout.writeStartElement(ARRAY_TAG);
-                xout.writeCharacters("\n");
                 xout.writeStartElement(DICT_TAG);
-                xout.writeCharacters("\n");
-                
+
                 writeProperty(xout, "CFBundleURLName", identifier);
+
                 writeKey(xout, "CFBundleURLSchemes");
                 xout.writeStartElement(ARRAY_TAG);
-                xout.writeCharacters("\n");
                 for(String scheme:registeredProtocols){
                     writeString(xout, scheme);
                 }
+
                 xout.writeEndElement();
-                xout.writeCharacters("\n");
-                
                 xout.writeEndElement();
-                xout.writeCharacters("\n");
                 xout.writeEndElement();
-                xout.writeCharacters("\n");
             }
 
             // Write runtime
@@ -631,28 +620,23 @@ public class AppBundlerTask extends Task {
             if (isDebug) {
                 writeKey(xout, "JVMDebug");
                 writeBoolean(xout, isDebug);
-                xout.writeCharacters("\n");
             }
 
             // Write CFBundleDocument entries
             writeKey(xout, "CFBundleDocumentTypes");
             
             xout.writeStartElement(ARRAY_TAG);
-            xout.writeCharacters("\n");
-            
+
             for(BundleDocument bundleDocument: bundleDocuments) {
                 xout.writeStartElement(DICT_TAG);
-                xout.writeCharacters("\n");
-                
+
                 writeKey(xout, "CFBundleTypeExtensions");
                 xout.writeStartElement(ARRAY_TAG);
-                xout.writeCharacters("\n");
                 for(String extension : bundleDocument.getExtensions()) {
                     writeString(xout, extension);
                 }
                 xout.writeEndElement();
-                xout.writeCharacters("\n");
-                
+
                 if(bundleDocument.hasIcon()) {
                     writeKey(xout, "CFBundleTypeIconFile");
 
@@ -676,52 +660,43 @@ public class AppBundlerTask extends Task {
                 writeBoolean(xout, bundleDocument.isPackage());
                 
                 xout.writeEndElement();
-                xout.writeCharacters("\n");
             }
             
             xout.writeEndElement();
-            xout.writeCharacters("\n");
-            
+
             // Write architectures
             writeKey(xout, "LSArchitecturePriority");
 
             xout.writeStartElement(ARRAY_TAG);
-            xout.writeCharacters("\n");
 
             for (String architecture : architectures) {
                 writeString(xout, architecture);
             }
 
             xout.writeEndElement();
-            xout.writeCharacters("\n");
 
             // Write Environment
             writeKey(xout, "LSEnvironment");
             xout.writeStartElement(DICT_TAG);
-            xout.writeCharacters("\n");
             writeKey(xout, "LC_CTYPE");
             writeString(xout, "UTF-8");
             xout.writeEndElement();
-            xout.writeCharacters("\n");
 
             // Write options
             writeKey(xout, "JVMOptions");
 
             xout.writeStartElement(ARRAY_TAG);
-            xout.writeCharacters("\n");
 
             for (Option option : options) {
                 if (option.getName() == null) writeString(xout, option.getValue());
             }
 
             xout.writeEndElement();
-            xout.writeCharacters("\n");
 
             // Write default options
             writeKey(xout, "JVMDefaultOptions");
 
             xout.writeStartElement(DICT_TAG);
-            xout.writeCharacters("\n");
 
             for (Option option : options) {
                 if (option.getName() != null) {
@@ -731,32 +706,24 @@ public class AppBundlerTask extends Task {
             }
 
             xout.writeEndElement();
-            xout.writeCharacters("\n");
 
             // Write arguments
             writeKey(xout, "JVMArguments");
 
             xout.writeStartElement(ARRAY_TAG);
-            xout.writeCharacters("\n");
 
             for (String argument : arguments) {
                 writeString(xout, argument);
             }
 
             xout.writeEndElement();
-            xout.writeCharacters("\n");
 
             // End root dictionary
             xout.writeEndElement();
-            xout.writeCharacters("\n");
-
             // End root element
             xout.writeEndElement();
-            xout.writeCharacters("\n");
-
             // Close document
             xout.writeEndDocument();
-            xout.writeCharacters("\n");
 
             out.flush();
         } catch (XMLStreamException exception) {
@@ -770,14 +737,12 @@ public class AppBundlerTask extends Task {
         xout.writeStartElement(KEY_TAG);
         xout.writeCharacters(key);
         xout.writeEndElement();
-        xout.writeCharacters("\n");
     }
 
     private void writeString(XMLStreamWriter xout, String value) throws XMLStreamException {
         xout.writeStartElement(STRING_TAG);
         xout.writeCharacters(value);
         xout.writeEndElement();
-        xout.writeCharacters("\n");
     }
     
     private void writeBoolean(XMLStreamWriter xout, boolean value) throws XMLStreamException {
