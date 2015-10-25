@@ -85,6 +85,7 @@ public class AppBundlerTask extends Task {
     private boolean supportsAutomaticGraphicsSwitching = true;
     private boolean hideDockIcon = false;
     private boolean isDebug = false;
+    private boolean allowHttp = false;
 
     // JVM info properties
     private String mainClassName = null;
@@ -180,6 +181,8 @@ public class AppBundlerTask extends Task {
     public void setDebug(boolean enabled) {
         this.isDebug = enabled;
     }
+
+    public void setAllowHttp(boolean allowed) { this.allowHttp = allowed; }
 
     public void setSupportsAutomaticGraphicsSwitching(boolean supportsAutomaticGraphicsSwitching) {
         this.supportsAutomaticGraphicsSwitching = supportsAutomaticGraphicsSwitching;
@@ -568,6 +571,14 @@ public class AppBundlerTask extends Task {
             if (highResolutionCapable) {
                 writeKey(xout, "NSHighResolutionCapable");
                 writeBoolean(xout, true); 
+            }
+
+            if(allowHttp) {
+                writeKey(xout, "NSAppTransportSecurity");
+                xout.writeStartElement(DICT_TAG);
+                writeKey(xout, "NSAllowsArbitraryLoads");
+                writeBoolean(xout, true);
+                xout.writeEndElement();
             }
 
             if (supportsAutomaticGraphicsSwitching) {
