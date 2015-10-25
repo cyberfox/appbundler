@@ -625,11 +625,10 @@ public class AppBundlerTask extends Task {
                     writeKey(xout, "CFBundleTypeIconFile");
 
                     File ifile = bundleDocument.getIconFile();
-                    
-                    if (file != null) {
+
+                    if (ifile != null) {
                         writeString(xout, ifile.getName());
-                    }
-                    else {
+                    } else {
                         writeString(xout, bundleDocument.getIcon());
                     }
                 }
