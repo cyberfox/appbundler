@@ -17,8 +17,10 @@ with the following changes:
   sandbox (see below).
 - Allows overriding of passed JVM options by the bundled app itself via java.util.Preferences **(contributed by Hendrik Schreiber)**
 - Allow setting custom Info.plist properties (e.g. SUFeedURL for Sparkle) **(contributed by Morgan Schweers)**
-- Provide an option to make the application able to open arbitrary HTTP endpoints. **(ibid)**
-- Format the Info.plist XML file nicely. **(ibid)**
+- Provide an option to make the application able to open arbitrary HTTP endpoints.
+- Format the Info.plist XML file nicely.
+- Add JNI files to the class path.
+- Allow the {bundle}/Java directory to be added as a class path entry.
 
 These are the environment variables passed to the JVM:
 
