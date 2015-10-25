@@ -115,6 +115,7 @@ public class AppBundlerTask extends Task {
     
     private static final int BUFFER_SIZE = 2048;
     private List<PlistEntry> customPlistEntries = new ArrayList<>();
+    private boolean includeJavaRootInClasspath = false;
 
     public void setOutputDirectory(File outputDirectory) {
         this.outputDirectory = outputDirectory;
@@ -225,6 +226,8 @@ public class AppBundlerTask extends Task {
     public void addConfiguredClassPath(FileSet classPath) {
         this.classPath.add(classPath);
     }
+
+    public void setIncludeJavaRoot(boolean includeJavaRoot) { this.includeJavaRootInClasspath = true; }
 
     public void addConfiguredLibraryPath(FileSet libraryPath) {
         this.libraryPath.add(libraryPath);
@@ -585,6 +588,11 @@ public class AppBundlerTask extends Task {
             if (highResolutionCapable) {
                 writeKey(xout, "NSHighResolutionCapable");
                 writeBoolean(xout, true); 
+            }
+
+            if (includeJavaRootInClasspath) {
+                writeKey(xout, "IncludeJavaRoot");
+                writeBoolean(xout, true);
             }
 
             if (allowHttp) {

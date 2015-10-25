@@ -39,6 +39,7 @@
 #define JVM_CLASSPATH_KEY "JVMClassPath"
 #define JVM_DEBUG_KEY "JVMDebug"
 #define SPLASH_IMAGE_KEY "SplashImage"
+#define INCLUDE_JAVA_ROOT "IncludeJavaRoot"
 
 #define JVM_RUN_PRIVILEGED "JVMRunPrivileged"
 
@@ -201,12 +202,16 @@ int launch(char *commandName, int progargc, char *progargv[]) {
     NSString *javaPath = [mainBundlePath stringByAppendingString:@"/Contents/Java"];
     NSMutableString *classPath = [NSMutableString stringWithString:@"-Djava.class.path="];
 
+    NSNumber *includeJavaRoot = [infoDictionary objectForKey:@INCLUDE_JAVA_ROOT];
     NSArray *cp = [infoDictionary objectForKey:@JVM_CLASSPATH_KEY];
     if (cp == nil) {
         
         // Implicit classpath, so use the contents of the "Java" folder to build an explicit classpath
         
         [classPath appendFormat:@"%@/Classes", javaPath];
+        if(includeJavaRoot != nil && [includeJavaRoot boolValue]) {
+            [classPath appendFormat:@":%@", javaPath];
+        }
         NSFileManager *defaultFileManager = [NSFileManager defaultManager];
         NSArray *javaDirectoryContents = [defaultFileManager contentsOfDirectoryAtPath:javaPath error:nil];
         if (javaDirectoryContents == nil) {
