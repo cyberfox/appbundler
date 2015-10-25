@@ -16,6 +16,9 @@ with the following changes:
   the OSX special folders and whether the application is running in the
   sandbox (see below).
 - Allows overriding of passed JVM options by the bundled app itself via java.util.Preferences **(contributed by Hendrik Schreiber)**
+- Allow setting custom Info.plist properties (e.g. SUFeedURL for Sparkle) **(contributed by Morgan Schweers)**
+- Provide an option to make the application able to open arbitrary HTTP endpoints. **(ibid)**
+- Format the Info.plist XML file nicely. **(ibid)**
 
 These are the environment variables passed to the JVM:
 
@@ -30,7 +33,7 @@ Example:
 
     <target name="bundle">
       <taskdef name="bundleapp" 
-        classpath="appbundler-1.0ea.jar"
+        classpath="appbundler-1.0ea-cf2.jar"
         classname="com.oracle.appbundler.AppBundlerTask"/>
 
       <bundleapp 
